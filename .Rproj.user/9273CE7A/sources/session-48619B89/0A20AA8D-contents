@@ -1,0 +1,63 @@
+---
+title: "HW3 Problem 2"
+author: "Lydia Reedstrom and Saksham Goel"
+date: "2022-11-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Problem 2: COVID-19
+
+#### The “covid.csv” file contains data on Covid-19 cases in a province of Italy. For the following exercises, only provide first rows or elements in the output if the results are too large.
+
+```{r}
+covid <- read.csv("~/Desktop/R Class/GitHub/HW3_Group4/covid.csv", row.names = 1)
+```
+
+#### Order the data based on the date of diagnosis (from first to most recent).
+
+```{r}
+covid[, c(1,4,6,7)] <- lapply(covid[, c(1,4,6,7)], as.Date)
+
+covid <- covid[order(covid$Date.of.diagnosis),]
+```
+
+#### Add a column that reports if a case was symptomatic AND in non-intensive care. Name the observation “symptom_nonintense” if the conditions apply and “other” if not and then produce a bar plot of this new variable.
+
+```{r}
+covid$Symptom.care <- NA
+covid$Symptom.care <- ifelse(covid$Symptoms == "Symptomatic" & covid$Hospitalization.type == "Non-Intensive care hospitalization", "symptom_nonintense","other")
+barplot(table(covid$Symptom.care))
+```
+
+#### Count the number of cases that are asymptomatic OR in non-intensive care (but not both) AND were born after 1990.
+
+```{r}
+sum(xor(covid$Symptoms == "Asymptomatic", covid$Hospitalization.type == "Non-Intensive care hospitalization") & covid$Date.of.birth > "1990-12-31")
+```
+
+#### Create a new dataset including only the rows where “Epidemiological.link…Notes” includes the words “contact” OR “symptom” (or both). Hint: you can use the grep() function and tolower().
+
+```{r}
+covid$Epidemiological.link...Notes <- tolower(covid$Epidemiological.link...Notes)
+
+filter.notes <- grep("contact | symptom", covid$Epidemiological.link...Notes)
+
+new.covid <- covid[filter.notes,]
+
+```
+
+#### In the previous dataset add a column reporting the age (in years, therefore in integer format) of each patient as of October 25, 2022. Save this dataset into a .csv file and make it available on your GitHub repository for this assignment.
+
+```{r}
+Age <- c(with(new.covid, floor((as.Date("2022-10-25", format = "%Y-%m-%d") - new.covid$Date.of.birth) / 365)))
+
+new.covid <- cbind(new.covid, Age)
+
+write.csv(new.covid, "problem2_result.csv")
+
+```
+
